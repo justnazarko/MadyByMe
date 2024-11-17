@@ -1,8 +1,8 @@
 {
   "version": 2,
-  "dgSpecHash": "CWQRxWeyUs0oyltkbBb4vcmEyeN8lPeEvbht8nO3a31oAX2j+ptKmmdZpYlv0glbVVgqUmae/tHoYLAMC6QYiQ==",
+  "dgSpecHash": "Zf1b/zgbJlHplseck5Fw8pDXRUc+gtnGjsW6I83RRFZIzRX0jHor/Xmy3XwMhz6/p/+ILoj7w/qkMUhzJwppog==",
   "success": true,
-  "projectFilePath": "D:\\3course_1sem\\web\\MadeByMe\\MadeByMe\\MadeByMe.csproj",
+  "projectFilePath": "C:\\Users\\User\\Source\\Repos\\justnazarko\\MadyByMe\\MadeByMe\\MadeByMe\\MadeByMe.csproj",
   "expectedPackageFiles": [
     "C:\\Users\\User\\.nuget\\packages\\microsoft.extensions.dependencyinjection.abstractions\\8.0.0\\microsoft.extensions.dependencyinjection.abstractions.8.0.0.nupkg.sha512",
     "C:\\Users\\User\\.nuget\\packages\\microsoft.extensions.logging.abstractions\\8.0.0\\microsoft.extensions.logging.abstractions.8.0.0.nupkg.sha512",
