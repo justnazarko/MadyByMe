@@ -1,17 +1,17 @@
 {
   "format": 1,
   "restore": {
-    "D:\\3course_1sem\\web\\MadeByMe\\MadeByMe\\MadeByMe.csproj": {}
+    "C:\\Users\\User\\Source\\Repos\\justnazarko\\MadyByMe\\MadeByMe\\MadeByMe\\MadeByMe.csproj": {}
   },
   "projects": {
-    "D:\\3course_1sem\\web\\MadeByMe\\MadeByMe\\MadeByMe.csproj": {
+    "C:\\Users\\User\\Source\\Repos\\justnazarko\\MadyByMe\\MadeByMe\\MadeByMe\\MadeByMe.csproj": {
       "version": "1.0.0",
       "restore": {
-        "projectUniqueName": "D:\\3course_1sem\\web\\MadeByMe\\MadeByMe\\MadeByMe.csproj",
+        "projectUniqueName": "C:\\Users\\User\\Source\\Repos\\justnazarko\\MadyByMe\\MadeByMe\\MadeByMe\\MadeByMe.csproj",
         "projectName": "MadeByMe",
-        "projectPath": "D:\\3course_1sem\\web\\MadeByMe\\MadeByMe\\MadeByMe.csproj",
+        "projectPath": "C:\\Users\\User\\Source\\Repos\\justnazarko\\MadyByMe\\MadeByMe\\MadeByMe\\MadeByMe.csproj",
         "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-        "outputPath": "D:\\3course_1sem\\web\\MadeByMe\\MadeByMe\\obj\\",
+        "outputPath": "C:\\Users\\User\\Source\\Repos\\justnazarko\\MadyByMe\\MadeByMe\\MadeByMe\\obj\\",
         "projectStyle": "PackageReference",
         "fallbackFolders": [
           "D:\\VisualStudio Shared Components\\NuGetPackages"
@@ -44,6 +44,10 @@
         "net6.0": {
           "targetAlias": "net6.0",
           "dependencies": {
+            "Bogus": {
+              "target": "Package",
+              "version": "[35.6.1, )"
+            },
             "Npgsql": {
               "target": "Package",
               "version": "[8.0.5, )"

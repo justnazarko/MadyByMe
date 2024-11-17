@@ -1,324 +1,258 @@
 ﻿using System;
-using Npgsql;
 using System.Collections.Generic;
+using Bogus;
+using Npgsql;
 
 class Program
 {
     static void Main(string[] args)
     {
-        Console.OutputEncoding = System.Text.Encoding.UTF8;
-
-        string connectionString = "Host=localhost;Port=5432;Username=postgres;Password=8040;Database=MadeByMe";
-
-        //InsertRandomUsers(connectionString, 30);
-        //InsertRandomCategories(connectionString, 5);
-        //InsertRandomPosts(connectionString, 30);
-        //InsertRandomSelectedPosts(connectionString, 30);
-        //InsertRandomUsersAndSelectedPosts(connectionString, 30);
-        //InsertRandomReviews(connectionString, 30);
-
-        DisplayAllTables(connectionString);
+        string connString = "Host=localhost;Port=5432;Username=postgres;Password=8040;Database=MadeByMe";
+        InsertRandomData(connString, 0, 0, 0, 0, 0);
+        PrintAllTables(connString);
     }
 
-    static void InsertRandomUsers(string connString, int recordCount)
+    static void InsertRandomData(string connString, int userCount, int categoryCount, int postCount, int reviewCount, int selectedPostCount)
     {
-        var random = new Random();
-        var names = new List<string> { "Олена", "Катерина", "Марія", "Софія", "Людмила", "Петро", "Владислав", "Тарас", "Злата", "Юлія","Михайло", "Галина" };
+        var userFaker = new Faker<User>()
+            .RuleFor(u => u.Name, f => f.Name.FullName())
+            .RuleFor(u => u.MobileNumber, f => f.Phone.PhoneNumber("+380#########"))
+            .RuleFor(u => u.Email, f => f.Internet.Email());
+
+        var categoryFaker = new Faker<Category>()
+            .RuleFor(c => c.Title, f => f.Commerce.Categories(1)[0]);
+
+        var postFaker = new Faker<Post>()
+            .RuleFor(p => p.Name, f => f.Commerce.ProductName())
+            .RuleFor(p => p.Description, f => f.Lorem.Sentence(10))
+            .RuleFor(p => p.PhotoPath, f => f.Image.PicsumUrl())
+            .RuleFor(p => p.CategoryRef, f => f.Random.Int(1, categoryCount))
+            .RuleFor(p => p.SellerRef, f => f.Random.Int(1, userCount))
+            .RuleFor(p => p.PayCard, f => f.Finance.CreditCardNumber())
+            .RuleFor(p => p.Status, f => f.PickRandom(new[] { "in stock", "sold" }))
+            .RuleFor(p => p.Rating, f => f.Random.Decimal(1, 5));
 
         using (var conn = new NpgsqlConnection(connString))
         {
             conn.Open();
 
-            for (int i = 1; i <= recordCount; i++)
+            var users = userFaker.Generate(userCount);
+            foreach (var user in users)
             {
-                string name = names[random.Next(names.Count)] + " " + names[random.Next(names.Count)];
-                string mobile = "+380" + random.Next(100000000, 999999999).ToString();
-                string email = name.Replace(" ", "").ToLower() + "@example.com";
-
-                var sql = $"INSERT INTO Users (users_id, users_name, mobile_number, email) VALUES ({i}, '{name}', '{mobile}', '{email}')";
-
+                var sql = "INSERT INTO Users (name, mobile_number, email) VALUES (@name, @mobile_number, @email)";
                 using (var cmd = new NpgsqlCommand(sql, conn))
                 {
+                    cmd.Parameters.AddWithValue("name", user.Name);
+                    cmd.Parameters.AddWithValue("mobile_number", user.MobileNumber);
+                    cmd.Parameters.AddWithValue("email", user.Email);
                     cmd.ExecuteNonQuery();
                 }
             }
-        }
 
-        Console.WriteLine($"{recordCount} записів вставлено в таблицю Users.");
-    }
-
-    static void InsertRandomCategories(string connString, int recordCount)
-    {
-        var random = new Random();
-        var categories = new List<string> { "Одяг", "Біжутерія", "Іграшки", "Брилки", "Інше" };
-
-        using (var conn = new NpgsqlConnection(connString))
-        {
-            conn.Open();
-
-            for (int i = 0; i < recordCount; i++)
+            var categories = categoryFaker.Generate(categoryCount);
+            foreach (var category in categories)
             {
-                string title = categories[random.Next(categories.Count)] + " ";
-
-                var sql = $"INSERT INTO Categories (title) VALUES ('{title}')";
-
+                var sql = "INSERT INTO Categories (title) VALUES (@title)";
                 using (var cmd = new NpgsqlCommand(sql, conn))
                 {
+                    cmd.Parameters.AddWithValue("title", category.Title);
                     cmd.ExecuteNonQuery();
                 }
             }
-        }
 
-        Console.WriteLine($"{recordCount} записів вставлено в таблицю Categories.");
-    }
-
-    static void InsertRandomPosts(string connString, int recordCount)
-    {
-        var random = new Random();
-        var postNames = new List<string> { "Підвіска", "Брилок на телефон", "Майка", "Джинси", "Букет", "Валіза" };
-        var descriptions = new List<string> { "Зроблено з натуральних матеріалів", "Купуйте в подарунок своїм друзям!", "Допоможіть назбирати на мрію(", "За деталями звертайтесь в пп" };
-        var photoBasePath = "Post_Photos/";
-
-        using (var conn = new NpgsqlConnection(connString))
-        {
-            conn.Open();
-
-            var categories = new List<string>();
-            var getCategorySql = "SELECT title FROM Categories";
-            using (var getCategoryCmd = new NpgsqlCommand(getCategorySql, conn))
+            var posts = postFaker.Generate(postCount);
+            foreach (var post in posts)
             {
-                using (var reader = getCategoryCmd.ExecuteReader())
-                {
-                    while (reader.Read())
-                    {
-                        categories.Add(reader.GetString(0));
-                    }
-                }
-            }
-
-            for (int i = 1; i <= recordCount; i++)
-            {
-                string postName = postNames[random.Next(postNames.Count)];
-                string description = descriptions[random.Next(descriptions.Count)];
-                string category = categories[random.Next(categories.Count)]; 
-                string photoPath = $"{photoBasePath}{i}"; 
-                int sellerId = random.Next(1, 31); 
-                string payCard = "1234567812345678"; 
-                string status = random.Next(0, 2) == 0 ? "in stock" : "sold"; 
-                decimal rating = Math.Round((decimal)random.NextDouble() * 5, 2); 
-
-                string insertQuery = @"
-                INSERT INTO Posts (post_id, post_name, description, photo, category, seller, pay_card, status, rating)
-                 VALUES (@post_id, @post_name, @description, @photo, @category, @seller, @pay_card, @status, @rating)";
-                using (var cmd = new NpgsqlCommand(insertQuery, conn))
-                {
-                    cmd.Parameters.AddWithValue("post_id", i);
-                    cmd.Parameters.AddWithValue("post_name", postName);
-                    cmd.Parameters.AddWithValue("description", description);
-                    cmd.Parameters.AddWithValue("photo", photoPath);
-                    cmd.Parameters.AddWithValue("category", category);
-                    cmd.Parameters.AddWithValue("seller", sellerId);
-                    cmd.Parameters.AddWithValue("pay_card", payCard);
-                    cmd.Parameters.AddWithValue("status", status);
-                    cmd.Parameters.AddWithValue("rating", rating);
-
-                    cmd.ExecuteNonQuery();
-                }
-            }
-        }
-
-        Console.WriteLine($"{recordCount} записів вставлено в таблицю Posts.");
-    }
-
-    static void InsertRandomSelectedPosts(string connString, int recordCount)
-    {
-        var random = new Random();
-
-        using (var conn = new NpgsqlConnection(connString))
-        {
-            conn.Open();
-
-            for (int i = 1; i <= recordCount; i++)
-            {
-                int postId = random.Next(1, 31); 
-
-                var sql = $"INSERT INTO Selected_posts (selected_post_id, post_id) VALUES ({i}, {postId})";
-
+                var sql = @"
+                    INSERT INTO Posts (name, description, photo_path, category_ref, seller_ref, pay_card, status, rating)
+                    VALUES (@name, @description, @photo_path, @category_ref, @seller_ref, @pay_card, @status, @rating)";
                 using (var cmd = new NpgsqlCommand(sql, conn))
                 {
+                    cmd.Parameters.AddWithValue("name", post.Name);
+                    cmd.Parameters.AddWithValue("description", post.Description);
+                    cmd.Parameters.AddWithValue("photo_path", post.PhotoPath);
+                    cmd.Parameters.AddWithValue("category_ref", post.CategoryRef);
+                    cmd.Parameters.AddWithValue("seller_ref", post.SellerRef);
+                    cmd.Parameters.AddWithValue("pay_card", post.PayCard.Length > 16 ? post.PayCard.Substring(0, 16) : post.PayCard);
+                    cmd.Parameters.AddWithValue("status", post.Status);
+                    cmd.Parameters.AddWithValue("rating", post.Rating);
                     cmd.ExecuteNonQuery();
                 }
             }
-        }
 
-        Console.WriteLine($"{recordCount} записів вставлено в таблицю Selected_posts.");
-    }
+            var reviewFaker = new Faker<Review>()
+                .RuleFor(r => r.ReviewContent, f => f.Lorem.Sentence(10))
+                .RuleFor(r => r.AuthorRef, f => f.Random.Short(1, 50))
+                .RuleFor(r => r.PostRef, f => f.Random.Short(1, 50));
 
-    static void InsertRandomUsersAndSelectedPosts(string connString, int recordCount)
-    {
-        var random = new Random();
-
-        using (var conn = new NpgsqlConnection(connString))
-        {
-            conn.Open();
-
-            for (int i = 1; i <= recordCount; i++)
+            var reviews = reviewFaker.Generate(reviewCount);
+            foreach (var review in reviews)
             {
-                int userId = random.Next(1, 31);
-                int selectedPostId = random.Next(1, 31);
-
-                var sql = $"INSERT INTO Users_and_Selected_posts (user_, selected_post) VALUES ({userId}, {selectedPostId})";
-
+                var sql = @"
+                INSERT INTO Reviews (review_content, author_ref, post_ref)
+                VALUES (@review_content, @author_ref, @post_ref)";
                 using (var cmd = new NpgsqlCommand(sql, conn))
                 {
-                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.AddWithValue("review_content", review.ReviewContent);
+                    cmd.Parameters.AddWithValue("author_ref", review.AuthorRef);
+                    cmd.Parameters.AddWithValue("post_ref", review.PostRef);
+
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch (Npgsql.PostgresException ex) when (ex.SqlState == "23503")
+                    {
+                        Console.WriteLine($"Пропущено відгук через некоректні посилання (author_ref={review.AuthorRef}, post_ref={review.PostRef}).");
+                    }
                 }
             }
-        }
 
-        Console.WriteLine($"{recordCount} записів вставлено в таблицю Users_and_Selected_posts.");
-    }
-    static void InsertRandomReviews(string connString, int recordCount)
-    {
-        var random = new Random();
-        var reviewTexts = new List<string>
-    {
-        "Чудовий продукт!",
-        "Дуже рекомендую!",
-        "Дивовижна майстерність.",
-        "Гарне співвідношення ціни та якості",
-        "Куплю знову!",
-        "Не так, як очікувалося",
-        "Дуже задоволений",
-        "Швидка доставка та відмінна якість"
-    };
+            var selectedPostFaker = new Faker<SelectedPost>()
+                .RuleFor(sp => sp.UserRef, f => f.Random.Short(1, 50))
+                .RuleFor(sp => sp.PostRef, f => f.Random.Short(1, 50));
 
-        using (var conn = new NpgsqlConnection(connString))
-        {
-            conn.Open();
+            var selectedPosts = selectedPostFaker.Generate(selectedPostCount);
+            var insertedPairs = new HashSet<(short, short)>();
 
-            for (int i = 1; i <= recordCount; i++)
+            foreach (var selectedPost in selectedPosts)
             {
-                string reviewContent = reviewTexts[random.Next(reviewTexts.Count)];
-                int userId = random.Next(1, 31); 
-                int postId = random.Next(1, 31); 
+                if (!insertedPairs.Add((selectedPost.UserRef, selectedPost.PostRef)))
+                    continue;
 
-                var sql = $@"
-                INSERT INTO Reviews (review_id, review_content, author, post) 
-                VALUES ({i}, '{reviewContent}', {userId}, {postId})";
-
+                var sql = @"
+                INSERT INTO Selected_posts (user_ref, post_ref)
+                VALUES (@user_ref, @post_ref)";
                 using (var cmd = new NpgsqlCommand(sql, conn))
                 {
-                    cmd.ExecuteNonQuery();
+                    cmd.Parameters.AddWithValue("user_ref", selectedPost.UserRef);
+                    cmd.Parameters.AddWithValue("post_ref", selectedPost.PostRef);
+
+                    try
+                    {
+                        cmd.ExecuteNonQuery();
+                    }
+                    catch (Npgsql.PostgresException ex) when (ex.SqlState == "23503")
+                    {
+                        Console.WriteLine($"Пропущено зв'язок через некоректні посилання (user_ref={selectedPost.UserRef}, post_ref={selectedPost.PostRef}).");
+                    }
+                    catch (Npgsql.PostgresException ex) when (ex.SqlState == "23505")
+                    {
+                        Console.WriteLine($"Пропущено дублюючий зв'язок (user_ref={selectedPost.UserRef}, post_ref={selectedPost.PostRef}).");
+                    }
                 }
             }
         }
-
-        Console.WriteLine($"{recordCount} записів вставлено в таблицю Reviews.");
     }
 
-    static void DisplayAllTables(string connString)
+    static void PrintAllTables(string connString)
     {
         using (var conn = new NpgsqlConnection(connString))
         {
             conn.Open();
+            Console.WriteLine("Users:");
+            PrintTable(conn, "Users", new[] { "user_id", "name", "mobile_number", "email" });
 
-            
-            Console.WriteLine("Таблиця Users:");
-            var usersSql = "SELECT users_id, users_name, mobile_number, email FROM Users";
-            using (var usersCmd = new NpgsqlCommand(usersSql, conn))
-            {
-                using (var reader = usersCmd.ExecuteReader())
-                {
-                    Console.WriteLine($"{"ID",-5} {"Ім'я",-20} {"Телефон",-15} {"Email",-30}");
-                    while (reader.Read())
-                    {
-                        Console.WriteLine($"{reader.GetInt16(0),-5} {reader.GetString(1),-20} {reader.GetString(2),-15} {reader.GetString(3),-30}");
-                    }
-                }
-            }
-            Console.WriteLine();
+            Console.WriteLine("\nCategories:");
+            PrintTable(conn, "Categories", new[] { "category_id", "title" });
 
-            
-            Console.WriteLine("Таблиця Categories:");
-            var categoriesSql = "SELECT title FROM Categories";
-            using (var categoriesCmd = new NpgsqlCommand(categoriesSql, conn))
-            {
-                using (var reader = categoriesCmd.ExecuteReader())
-                {
-                    Console.WriteLine($"{"Категорія",-30}");
-                    while (reader.Read())
-                    {
-                        Console.WriteLine($"{reader.GetString(0),-30}");
-                    }
-                }
-            }
-            Console.WriteLine();
+            Console.WriteLine("\nPosts:");
+            PrintTable(conn, "Posts", new[] { "post_id", "name", "description", "photo_path", "category_ref", "seller_ref", "pay_card", "status", "rating" });
 
-            
-            Console.WriteLine("Таблиця Posts:");
-            var postsSql = "SELECT post_id, post_name, description, photo, category, seller, pay_card, status, rating FROM Posts";
-            using (var postsCmd = new NpgsqlCommand(postsSql, conn))
-            {
-                using (var reader = postsCmd.ExecuteReader())
-                {
-                    Console.WriteLine($"{"ID",-5} {"Назва",-20} {"Опис",-40} {"Фото",-20} {"Категорія",-15} {"Продавець",-10} {"Картка",-20} {"Статус",-15} {"Рейтинг",-10}");
-                    while (reader.Read())
-                    {
-                        Console.WriteLine($"{reader.GetInt16(0),-5} {reader.GetString(1),-20} {reader.GetString(2),-40} {reader.GetString(3),-20} {reader.GetString(4),-15} {reader.GetInt16(5),-10} {reader.GetString(6),-20} {reader.GetString(7),-15} {reader.GetDecimal(8),-10}");
-                    }
-                }
-            }
-            Console.WriteLine();
+            Console.WriteLine("\nReviews:");
+            PrintTable(conn, "Reviews", new[] { "review_id", "review_content", "author_ref", "post_ref" });
 
-            
-            Console.WriteLine("Таблиця Selected_posts:");
-            var selectedPostsSql = "SELECT selected_post_id, post_id FROM Selected_posts";
-            using (var selectedPostsCmd = new NpgsqlCommand(selectedPostsSql, conn))
-            {
-                using (var reader = selectedPostsCmd.ExecuteReader())
-                {
-                    Console.WriteLine($"{"Selected Post ID",-20} {"Post ID",-10}");
-                    while (reader.Read())
-                    {
-                        Console.WriteLine($"{reader.GetInt16(0),-20} {reader.GetInt16(1),-10}");
-                    }
-                }
-            }
-            Console.WriteLine();
-
-            
-            Console.WriteLine("Таблиця Users_and_Selected_posts:");
-            var usersSelectedPostsSql = "SELECT user_, selected_post FROM Users_and_Selected_posts";
-            using (var usersSelectedPostsCmd = new NpgsqlCommand(usersSelectedPostsSql, conn))
-            {
-                using (var reader = usersSelectedPostsCmd.ExecuteReader())
-                {
-                    Console.WriteLine($"{"User ID",-10} {"Selected Post ID",-20}");
-                    while (reader.Read())
-                    {
-                        Console.WriteLine($"{reader.GetInt16(0),-10} {reader.GetInt16(1),-20}");
-                    }
-                }
-            }
-            Console.WriteLine();
-
-            
-            Console.WriteLine("Таблиця Reviews:");
-            var reviewsSql = "SELECT review_id, review_content, author, post FROM Reviews";
-            using (var reviewsCmd = new NpgsqlCommand(reviewsSql, conn))
-            {
-                using (var reader = reviewsCmd.ExecuteReader())
-                {
-                    Console.WriteLine($"{"Review ID",-10} {"Вміст",-50} {"Автор",-10} {"Post ID",-10}");
-                    while (reader.Read())
-                    {
-                        Console.WriteLine($"{reader.GetInt16(0),-10} {reader.GetString(1),-50} {reader.GetInt16(2),-10} {reader.GetInt16(3),-10}");
-                    }
-                }
-            }
-            Console.WriteLine();
+            Console.WriteLine("\nSelected_posts:");
+            PrintTable(conn, "Selected_posts", new[] { "user_ref", "post_ref" });
         }
     }
 
+    static void PrintTable(NpgsqlConnection conn, string tableName, string[] columns)
+    {
+        var sql = $"SELECT * FROM {tableName}";
+        using (var cmd = new NpgsqlCommand(sql, conn))
+        using (var reader = cmd.ExecuteReader())
+        {
+            int[] columnWidths = new int[columns.Length];
+
+            // Обчислюємо максимальну довжину значень у кожному стовпці для вирівнювання
+            foreach (var column in columns)
+            {
+                columnWidths[Array.IndexOf(columns, column)] = column.Length;
+            }
+
+            // Знаходимо максимальну ширину для кожного стовпця
+            while (reader.Read())
+            {
+                for (int i = 0; i < columns.Length; i++)
+                {
+                    int currentLength = reader[columns[i]].ToString().Length;
+                    if (currentLength > columnWidths[i])
+                    {
+                        columnWidths[i] = currentLength;
+                    }
+                }
+            }
+
+            // Друкуємо заголовки колонок
+            for (int i = 0; i < columns.Length; i++)
+            {
+                Console.Write(columns[i].PadRight(columnWidths[i] + 2)); // Додаємо додатковий відступ
+            }
+            Console.WriteLine();
+
+            // Друкуємо рядки таблиці
+            reader.Close(); // Потрібно закрити попередній reader, щоб знову виконати запит
+            using (var cmd2 = new NpgsqlCommand(sql, conn))
+            using (var reader2 = cmd2.ExecuteReader())
+            {
+                while (reader2.Read())
+                {
+                    for (int i = 0; i < columns.Length; i++)
+                    {
+                        Console.Write(reader2[columns[i]].ToString().PadRight(columnWidths[i] + 2)); // Виведення значень з вирівнюванням
+                    }
+                    Console.WriteLine();
+                }
+            }
+        }
+    }
+
+}
+
+class User
+{
+    public string Name { get; set; }
+    public string MobileNumber { get; set; }
+    public string Email { get; set; }
+}
+
+class Category
+{
+    public string Title { get; set; }
+}
+
+class Post
+{
+    public string Name { get; set; }
+    public string Description { get; set; }
+    public string PhotoPath { get; set; }
+    public int CategoryRef { get; set; }
+    public int SellerRef { get; set; }
+    public string PayCard { get; set; }
+    public string Status { get; set; }
+    public decimal Rating { get; set; }
+}
+
+class Review
+{
+    public string ReviewContent { get; set; }
+    public short AuthorRef { get; set; }
+    public short PostRef { get; set; }
+}
+
+class SelectedPost
+{
+    public short UserRef { get; set; }
+    public short PostRef { get; set; }
 }

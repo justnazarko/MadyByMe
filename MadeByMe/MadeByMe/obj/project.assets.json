@@ -2,6 +2,19 @@
   "version": 3,
   "targets": {
     "net6.0": {
+      "Bogus/35.6.1": {
+        "type": "package",
+        "compile": {
+          "lib/net6.0/Bogus.dll": {
+            "related": ".xml"
+          }
+        },
+        "runtime": {
+          "lib/net6.0/Bogus.dll": {
+            "related": ".xml"
+          }
+        }
+      },
       "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.0": {
         "type": "package",
         "compile": {
@@ -139,6 +152,25 @@
     }
   },
   "libraries": {
+    "Bogus/35.6.1": {
+      "sha512": "QPJ8zLL0ScEunEoUNhMDigD4ykA/n7vXCZUQdGCFGHBfP2mNYjiCzR9Cj12eaFaDlwkhIC1HKQZihWl8OgbLsw==",
+      "type": "package",
+      "path": "bogus/35.6.1",
+      "files": [
+        ".nupkg.metadata",
+        ".signature.p7s",
+        "bogus.35.6.1.nupkg.sha512",
+        "bogus.nuspec",
+        "lib/net40/Bogus.dll",
+        "lib/net40/Bogus.xml",
+        "lib/net6.0/Bogus.dll",
+        "lib/net6.0/Bogus.xml",
+        "lib/netstandard1.3/Bogus.dll",
+        "lib/netstandard1.3/Bogus.xml",
+        "lib/netstandard2.0/Bogus.dll",
+        "lib/netstandard2.0/Bogus.xml"
+      ]
+    },
     "Microsoft.Extensions.DependencyInjection.Abstractions/8.0.0": {
       "sha512": "cjWrLkJXK0rs4zofsK4bSdg+jhDLTaxrkXu4gS6Y7MAlCvRyNNgwY/lJi5RDlQOnSZweHqoyvgvbdvQsRIW+hg==",
       "type": "package",
@@ -432,6 +464,7 @@
   },
   "projectFileDependencyGroups": {
     "net6.0": [
+      "Bogus >= 35.6.1",
       "Npgsql >= 8.0.5"
     ]
   },
@@ -442,11 +475,11 @@
   "project": {
     "version": "1.0.0",
     "restore": {
-      "projectUniqueName": "D:\\3course_1sem\\web\\MadeByMe\\MadeByMe\\MadeByMe.csproj",
+      "projectUniqueName": "C:\\Users\\User\\Source\\Repos\\justnazarko\\MadyByMe\\MadeByMe\\MadeByMe\\MadeByMe.csproj",
       "projectName": "MadeByMe",
-      "projectPath": "D:\\3course_1sem\\web\\MadeByMe\\MadeByMe\\MadeByMe.csproj",
+      "projectPath": "C:\\Users\\User\\Source\\Repos\\justnazarko\\MadyByMe\\MadeByMe\\MadeByMe\\MadeByMe.csproj",
       "packagesPath": "C:\\Users\\User\\.nuget\\packages\\",
-      "outputPath": "D:\\3course_1sem\\web\\MadeByMe\\MadeByMe\\obj\\",
+      "outputPath": "C:\\Users\\User\\Source\\Repos\\justnazarko\\MadyByMe\\MadeByMe\\MadeByMe\\obj\\",
       "projectStyle": "PackageReference",
       "fallbackFolders": [
         "D:\\VisualStudio Shared Components\\NuGetPackages"
@@ -479,6 +512,10 @@
       "net6.0": {
         "targetAlias": "net6.0",
         "dependencies": {
+          "Bogus": {
+            "target": "Package",
+            "version": "[35.6.1, )"
+          },
           "Npgsql": {
             "target": "Package",
             "version": "[8.0.5, )"
